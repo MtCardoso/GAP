@@ -1,0 +1,53 @@
+import PyPDF2
+import os
+import csv
+
+def converter_tamanho(tamanho_em_bytes):
+    # Converte bytes para gigabytes
+    gigabytes = tamanho_em_bytes / (1024 ** 3)
+
+    # Converte bytes para megabytes
+    megabytes = tamanho_em_bytes / (1024 ** 2)
+
+    # Converte bytes para kilobytes
+    kilobytes = tamanho_em_bytes / 1024
+
+    return gigabytes, megabytes, kilobytes
+
+def ler_pdf_e_gerar_csv(caminho_do_pdf, caminho_do_csv):
+    with open(caminho_do_pdf, 'rb') as arquivo_pdf:
+        leitor = PyPDF2.PdfReader(arquivo_pdf)
+        numero_de_paginas = leitor.numPages
+
+        # Obtém informações do arquivo PDF
+        info_arquivo = {'file_name': os.path.basename(caminho_do_pdf),
+                        'size': os.path.getsize(caminho_do_pdf)}
+
+        # Converte o tamanho para gigabytes, megabytes e kilobytes
+        gigabytes, megabytes, kilobytes = converter_tamanho(info_arquivo['size'])
+
+        # Adiciona informações de tamanho convertido
+        info_arquivo['size_gb'] = gigabytes
+        info_arquivo['size_mb'] = megabytes
+        info_arquivo['size_kb'] = kilobytes
+
+        # Cria um arquivo CSV para escrever as informações
+        with open(caminho_do_csv, 'w', newline='') as arquivo_csv:
+            campo_nomes = ['file_name', 'size', 'size_gb', 'size_mb', 'size_kb']
+            escritor_csv = csv.DictWriter(arquivo_csv, fieldnames=campo_nomes)
+
+            # Escreve os cabeçalhos no arquivo CSV
+            escritor_csv.writeheader()
+
+            # Escreve as informações do arquivo no arquivo CSV
+            escritor_csv.writerow(info_arquivo)
+
+        # Exibe o conteúdo de cada página
+        for pagina_numero in range(numero_de_paginas):
+            pagina = leitor.getPage(pagina_numero)
+            texto = pagina.extractText()
+            print(f"Conteúdo da página {pagina_numero + 1}:\n{texto}\n")
+
+# Substitua 'caminho/do/seu/arquivo.pdf' pelo caminho do seu arquivo PDF
+# Substitua 'caminho/do/seu/arquivo.csv' pelo caminho desejado para o arquivo CSV de saída
+ler_pdf_e_gerar_csv('caminho/do/seu/arquivo.pdf', 'caminho/do/seu/arquivo.csv')
